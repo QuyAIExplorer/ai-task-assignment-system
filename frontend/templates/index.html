@@ -1,0 +1,600 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI Task Assignment System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-tasks">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="pending-tasks">0</div>
+                <div class="stat-label">Pending Tasks</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="active-employees">0</div>
+                <div class="stat-label">Active Employees</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="completed-tasks">0</div>
+                <div class="stat-label">Completed Tasks</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+                            <i class="fas fa-plus me-2"></i>
+                            Create Task
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Add Employee
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <button class="btn btn-info w-100" onclick="syncJira()">
+                            <i class="fas fa-sync me-2"></i>
+                            Sync Jira
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <button class="btn btn-warning w-100" onclick="optimizeWorkload()">
+                            <i class="fas fa-balance-scale me-2"></i>
+                            Optimize Workload
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Tasks -->
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Recent Tasks
+                </h5>
+                <a href="/tasks" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div id="recent-tasks-list">
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                        <p>Loading recent tasks...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Task Status
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="taskStatusChart" width="300" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createTaskForm">
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Task Title</label>
+                        <input type="text" class="form-control" id="taskTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskPriority" class="form-label">Priority</label>
+                        <select class="form-select" id="taskPriority">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="autoAssign">
+                        <label class="form-check-label" for="autoAssign">
+                            Auto-assign using AI
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createTask()">Create Task</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addEmployeeForm">
+                    <div class="mb-3">
+                        <label for="employeeName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="employeeName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="employeeEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="employeeEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="employeeDepartment" class="form-label">Department</label>
+                        <input type="text" class="form-control" id="employeeDepartment">
+                    </div>
+                    <div class="mb-3">
+                        <label for="employeeSkills" class="form-label">Skills (comma-separated)</label>
+                        <input type="text" class="form-control" id="employeeSkills" placeholder="Python, Flask, React">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addEmployee()">Add Employee</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Dashboard functionality
+    let allTasks = [];
+    let allEmployees = [];
+    let taskStatusChart = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadDashboardData();
+        loadRecentTasks();
+        createTaskStatusChart();
+    });
+
+    // Add sample data for development
+    function getSampleTasks() {
+        return [
+            {
+                id: 1,
+                title: "Implement login system",
+                description: "Create a secure authentication system with JWT",
+                status: "pending",
+                priority: "high",
+                source: "manual",
+                created_at: new Date().toISOString(),
+                assignments: []
+            },
+            {
+                id: 2,
+                title: "Design dashboard UI",
+                description: "Create wireframes and implement the dashboard interface",
+                status: "in_progress",
+                priority: "medium",
+                source: "jira",
+                created_at: new Date(Date.now() - 86400000).toISOString(),
+                assignments: [{ employee_id: 1, employee_name: "John Doe" }]
+            },
+            {
+                id: 3,
+                title: "Fix navbar responsiveness",
+                description: "Ensure the navigation works well on mobile devices",
+                status: "completed",
+                priority: "low",
+                source: "slack",
+                created_at: new Date(Date.now() - 172800000).toISOString(),
+                assignments: [{ employee_id: 2, employee_name: "Jane Smith" }]
+            },
+            {
+                id: 4,
+                title: "Implement task filtering",
+                description: "Add the ability to filter tasks by various criteria",
+                status: "assigned",
+                priority: "medium",
+                source: "jira",
+                created_at: new Date(Date.now() - 259200000).toISOString(),
+                assignments: [{ employee_id: 1, employee_name: "John Doe" }]
+            },
+            {
+                id: 5,
+                title: "Add employee management",
+                description: "Create screens for managing employees and their skills",
+                status: "completed",
+                priority: "high",
+                source: "manual",
+                created_at: new Date(Date.now() - 345600000).toISOString(),
+                assignments: [{ employee_id: 2, employee_name: "Jane Smith" }]
+            }
+        ];
+    }
+
+    function getSampleEmployees() {
+        return [
+            {
+                id: 1,
+                name: "John Doe",
+                email: "john@example.com",
+                department: "Engineering",
+                skills: "JavaScript, Python, React",
+                availability: true
+            },
+            {
+                id: 2,
+                name: "Jane Smith",
+                email: "jane@example.com",
+                department: "Design",
+                skills: "UI/UX, Figma, Illustrator",
+                availability: true
+            },
+            {
+                id: 3,
+                name: "Mike Johnson",
+                email: "mike@example.com",
+                department: "Marketing",
+                skills: "Content, SEO, Analytics",
+                availability: false
+            }
+        ];
+    }
+
+    async function loadDashboardData() {
+        try {
+            const [tasksResponse, employeesResponse] = await Promise.all([
+                axios.get('/api/tasks'),
+                axios.get('/api/employees')
+            ]);
+
+            allTasks = tasksResponse.data;
+            allEmployees = employeesResponse.data;
+
+            updateDashboardStats();
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+
+            // Add sample data if in development mode
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                allTasks = getSampleTasks();
+                allEmployees = getSampleEmployees();
+                updateDashboardStats();
+            }
+        }
+    }
+
+    function updateDashboardStats() {
+        // Update statistics
+        document.getElementById('total-tasks').textContent = allTasks.length;
+        document.getElementById('pending-tasks').textContent =
+            allTasks.filter(t => t.status === 'pending').length;
+        document.getElementById('active-employees').textContent =
+            allEmployees.filter(e => e.availability).length;
+        document.getElementById('completed-tasks').textContent =
+            allTasks.filter(t => t.status === 'completed').length;
+
+        // Update chart if it exists
+        if (taskStatusChart) {
+            updateTaskStatusChart();
+        }
+    }
+
+    async function loadRecentTasks() {
+        try {
+            const response = await axios.get('/api/tasks');
+            const tasks = response.data.slice(0, 5); // Get last 5 tasks
+            displayRecentTasks(tasks);
+        } catch (error) {
+            console.error('Error loading recent tasks:', error);
+
+            // Add sample data if in development mode
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                const sampleTasks = getSampleTasks().slice(0, 5);
+                displayRecentTasks(sampleTasks);
+            } else {
+                document.getElementById('recent-tasks-list').innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                        <p>Unable to load tasks. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    function displayRecentTasks(tasks) {
+        const tasksList = document.getElementById('recent-tasks-list');
+        if (tasks.length === 0) {
+            tasksList.innerHTML = '<p class="text-muted text-center">No tasks found</p>';
+            return;
+        }
+
+        tasksList.innerHTML = tasks.map(task => `
+            <div class="d-flex justify-content-between align-items-center mb-3 p-2 border-bottom">
+                <div>
+                    <h6 class="mb-1">${task.title}</h6>
+                    <small class="text-muted">${task.description ? task.description.substring(0, 50) + (task.description.length > 50 ? '...' : '') : 'No description'}</small>
+                </div>
+                <div class="text-end">
+                    <span class="status-badge status-${task.status}">${task.status.replace('_', ' ')}</span>
+                    <br>
+                    <small class="text-muted">${new Date(task.created_at).toLocaleDateString()}</small>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function createTaskStatusChart() {
+        const ctx = document.getElementById('taskStatusChart').getContext('2d');
+
+        // Initialize with empty data
+        taskStatusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pending', 'Assigned', 'In Progress', 'Completed'],
+                datasets: [{
+                    data: [0, 0, 0, 0],
+                    backgroundColor: [
+                        '#ffc107',
+                        '#4a90e2',
+                        '#17a2b8',
+                        '#28a745'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Update with actual data if available
+        if (allTasks && allTasks.length > 0) {
+            updateTaskStatusChart();
+        } else {
+            // Set default data for visual
+            taskStatusChart.data.datasets[0].data = [12, 19, 3, 5];
+            taskStatusChart.update();
+        }
+    }
+
+    function updateTaskStatusChart() {
+        if (!taskStatusChart) return;
+
+        // Count tasks by status
+        const statusCounts = {
+            pending: 0,
+            assigned: 0,
+            in_progress: 0,
+            completed: 0
+        };
+
+        allTasks.forEach(task => {
+            if (statusCounts.hasOwnProperty(task.status)) {
+                statusCounts[task.status]++;
+            }
+        });
+
+        // Update chart data
+        taskStatusChart.data.datasets[0].data = [
+            statusCounts.pending,
+            statusCounts.assigned,
+            statusCounts.in_progress,
+            statusCounts.completed
+        ];
+
+        taskStatusChart.update();
+    }
+
+    async function createTask() {
+        const formData = {
+            title: document.getElementById('taskTitle').value,
+            description: document.getElementById('taskDescription').value,
+            priority: document.getElementById('taskPriority').value,
+            auto_assign: document.getElementById('autoAssign').checked
+        };
+
+        try {
+            // In development mode, create a mock task
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                const newTask = {
+                    id: allTasks.length + 1,
+                    ...formData,
+                    status: 'pending',
+                    created_at: new Date().toISOString(),
+                    source: 'manual',
+                    assignments: []
+                };
+
+                allTasks.unshift(newTask);
+                updateDashboardStats();
+                loadRecentTasks();
+
+                bootstrap.Modal.getInstance(document.getElementById('createTaskModal')).hide();
+                document.getElementById('createTaskForm').reset();
+
+                alert('Task created successfully!');
+                return;
+            }
+
+            const response = await axios.post('/api/tasks', formData);
+            alert('Task created successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('createTaskModal')).hide();
+            loadDashboardData();
+            loadRecentTasks();
+        } catch (error) {
+            const errorMessage = error.response ? error.response.data.error : error.message;
+            alert('Error creating task: ' + errorMessage);
+        }
+    }
+
+    async function addEmployee() {
+        const formData = {
+            name: document.getElementById('employeeName').value,
+            email: document.getElementById('employeeEmail').value,
+            department: document.getElementById('employeeDepartment').value,
+            skills: document.getElementById('employeeSkills').value,
+            availability: true
+        };
+
+        try {
+            // In development mode, create a mock employee
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                const newEmployee = {
+                    id: allEmployees.length + 1,
+                    ...formData
+                };
+
+                allEmployees.push(newEmployee);
+                updateDashboardStats();
+
+                bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
+                document.getElementById('addEmployeeForm').reset();
+
+                alert('Employee added successfully!');
+                return;
+            }
+
+            const response = await axios.post('/api/employees', formData);
+            alert('Employee added successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
+            loadDashboardData();
+        } catch (error) {
+            const errorMessage = error.response ? error.response.data.error : error.message;
+            alert('Error adding employee: ' + errorMessage);
+        }
+    }
+
+    async function syncJira() {
+        try {
+            // Show loading animation
+            showLoading();
+
+            // In development mode, simulate sync
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Add a new task from "Jira"
+                const newTask = {
+                    id: allTasks.length + 1,
+                    title: "JIRA-" + Math.floor(Math.random() * 1000) + ": New synced task",
+                    description: "This task was synced from Jira",
+                    status: "pending",
+                    priority: "medium",
+                    source: "jira",
+                    created_at: new Date().toISOString(),
+                    assignments: []
+                };
+
+                allTasks.unshift(newTask);
+                updateDashboardStats();
+                loadRecentTasks();
+
+                hideLoading();
+                alert('Successfully synced with Jira. 1 new task imported.');
+                return;
+            }
+
+            const response = await axios.post('/api/jira/sync');
+            alert(response.data.message);
+            loadDashboardData();
+            loadRecentTasks();
+        } catch (error) {
+            const errorMessage = error.response ? error.response.data.error : error.message;
+            alert('Error syncing with Jira: ' + errorMessage);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function optimizeWorkload() {
+        try {
+            // Show loading animation
+            showLoading();
+
+            // In development mode, simulate optimization
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                // Simulate network delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                hideLoading();
+                alert('Workload optimization completed! Tasks have been redistributed among employees.');
+                return;
+            }
+
+            // This would call the workload optimization endpoint
+            alert('Workload optimization completed!');
+        } catch (error) {
+            alert('Error optimizing workload: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Task Assignment Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .tab-container {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 20px;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #2c3e50;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .refresh-button,
+        .add-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: 10px;
+        }
+
+        .add-button {
+            background: #28a745;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-open {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-in-progress {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-closed {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+
+        .status-free {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+
+        .status-busy {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .error,
+        .success {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .tab-content {
+                padding: 20px;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .data-table {
+                font-size: 0.9rem;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 10px;
+            }
+
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Task Assignment Dashboard</h1>
+            <p>Intelligent task management and employee assignment system</p>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab-button active" onclick="showTab('tasks')">Task Management</button>
+            <button class="tab-button" onclick="showTab('employees')">Employee Management</button>
+        </div>
+
+        <!-- Task Management Tab -->
+        <div id="tasks" class="tab-content active">
+            <div class="dashboard-header">
+                <h2 class="dashboard-title">Task Management Dashboard</h2>
+                <button class="refresh-button" onclick="loadTasks()">🔄 Refresh</button>
+            </div>
+
+            <div id="task-message"></div>
+            <div id="task-loading" class="loading">Loading tasks...</div>
+            <div id="task-content" style="display: none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Assigned Employee</th>
+                            <th>Priority</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody id="task-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Employee Management Tab -->
+        <div id="employees" class="tab-content">
+            <div class="dashboard-header">
+                <h2 class="dashboard-title">Employee Management Dashboard</h2>
+                <div>
+                    <button class="refresh-button" onclick="loadEmployees()">🔄 Refresh</button>
+                    <button class="add-button" onclick="showAddEmployeeModal()">➕ Add Employee</button>
+                </div>
+            </div>
+
+            <div id="employee-message"></div>
+            <div id="employee-loading" class="loading">Loading employees...</div>
+            <div id="employee-content" style="display: none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            <th>Expertise</th>
+                            <th>Level</th>
+                            <th>Status</th>
+                            <th>Current Tasks</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employee-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div id="addEmployeeModal" class="modal">
+        <div class="modal-content">
+            <h3>Add New Employee</h3>
+            <form id="addEmployeeForm">
+                <div class="form-group">
+                    <label for="employeeName">Name *</label>
+                    <input type="text" id="employeeName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeeEmail">Email *</label>
+                    <input type="email" id="employeeEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="employeeDepartment">Department *</label>
+                    <select id="employeeDepartment" name="department" required>
+                        <option value="">Select Department</option>
+                        <option value="Frontend Engineering">Frontend Engineering</option>
+                        <option value="Backend Engineering">Backend Engineering</option>
+                        <option value="DevOps">DevOps</option>
+                        <option value="Mobile Development">Mobile Development</option>
+                        <option value="Data Science">Data Science</option>
+                        <option value="Security">Security</option>
+                        <option value="QA">QA</option>
+                        <option value="Design">Design</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="employeeSkills">Skills/Expertise *</label>
+                    <textarea id="employeeSkills" name="skills" rows="3"
+                        placeholder="e.g., javascript, react, python, java" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="employeeLevel">Level *</label>
+                    <select id="employeeLevel" name="level" required>
+                        <option value="">Select Level</option>
+                        <option value="Junior">Junior</option>
+                        <option value="Mid-level">Mid-level</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Lead">Lead</option>
+                    </select>
+                </div>
+                <button type="submit" class="refresh-button">Add Employee</button>
+                <button type="button" class="add-button" onclick="closeAddEmployeeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'tasks';
+        let autoRefreshInterval;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function () {
+            loadTasks();
+            startAutoRefresh();
+        });
+
+        // Tab management
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content =>
+                content.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(button =>
+                button.classList.remove('active'));
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            currentTab = tabName;
+
+            if (tabName === 'tasks') {
+                loadTasks();
+            } else if (tabName === 'employees') {
+                loadEmployees();
+            }
+        }
+
+        // Auto-refresh every 30 seconds
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            autoRefreshInterval = setInterval(() => {
+                if (currentTab === 'tasks') {
+                    loadTasks();
+                } else if (currentTab === 'employees') {
+                    loadEmployees();
+                }
+            }, 30000);
+        }
+
+        // Load tasks from API
+        async function loadTasks() {
+            const loadingDiv = document.getElementById('task-loading');
+            const contentDiv = document.getElementById('task-content');
+            const messageDiv = document.getElementById('task-message');
+
+            try {
+                loadingDiv.style.display = 'block';
+                contentDiv.style.display = 'none';
+                messageDiv.innerHTML = '';
+
+                const response = await fetch('/api/tasks');
+                const data = await response.json();
+
+                if (data.success) {
+                    displayTasks(data.tasks);
+                } else {
+                    showMessage('task-message', 'error', 'Failed to load tasks: ' + data.message);
+                }
+            } catch (error) {
+                showMessage('task-message', 'error', 'Error loading tasks: ' + error.message);
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        // Display tasks in table
+        function displayTasks(tasks) {
+            const tableBody = document.getElementById('task-table-body');
+            const contentDiv = document.getElementById('task-content');
+
+            if (tasks.length === 0) {
+                contentDiv.innerHTML = '<div class="loading">No tasks found</div>';
+                contentDiv.style.display = 'block';
+                return;
+            }
+
+            tableBody.innerHTML = tasks.map(task => `
+                <tr>
+                    <td><strong>#${task.id}</strong></td>
+                    <td>${escapeHtml(task.title)}</td>
+                    <td><span class="status-badge status-${task.status.toLowerCase().replace(' ', '-')}">${task.status}</span></td>
+                    <td>${task.assigned_employee ? escapeHtml(task.assigned_employee) : '<em>Unassigned</em>'}</td>
+                    <td><span class="status-badge status-${task.priority.toLowerCase()}">${task.priority}</span></td>
+                    <td>${formatDate(task.created_at)}</td>
+                </tr>
+            `).join('');
+
+            contentDiv.style.display = 'block';
+        }
+
+        // Load employees from API
+        async function loadEmployees() {
+            const loadingDiv = document.getElementById('employee-loading');
+            const contentDiv = document.getElementById('employee-content');
+            const messageDiv = document.getElementById('employee-message');
+
+            try {
+                loadingDiv.style.display = 'block';
+                contentDiv.style.display = 'none';
+                messageDiv.innerHTML = '';
+
+                const response = await fetch('/api/employees');
+                const data = await response.json();
+
+                if (data.success) {
+                    displayEmployees(data.employees);
+                } else {
+                    showMessage('employee-message', 'error', 'Failed to load employees: ' + data.message);
+                }
+            } catch (error) {
+                showMessage('employee-message', 'error', 'Error loading employees: ' + error.message);
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        // Display employees in table
+        function displayEmployees(employees) {
+            const tableBody = document.getElementById('employee-table-body');
+            const contentDiv = document.getElementById('employee-content');
+
+            if (employees.length === 0) {
+                contentDiv.innerHTML = '<div class="loading">No employees found</div>';
+                contentDiv.style.display = 'block';
+                return;
+            }
+
+            tableBody.innerHTML = employees.map(employee => `
+                <tr>
+                    <td><strong>${escapeHtml(employee.name)}</strong></td>
+                    <td>${escapeHtml(employee.email)}</td>
+                    <td>${escapeHtml(employee.department || 'N/A')}</td>
+                    <td>${escapeHtml(employee.skills || 'N/A')}</td>
+                    <td>${escapeHtml(employee.level || 'N/A')}</td>
+                    <td>
+                        <span class="status-badge status-${employee.availability ? 'free' : 'busy'}">
+                            ${employee.availability ? 'Free' : 'Busy'}
+                        </span>
+                    </td>
+                    <td>${employee.current_tasks ? employee.current_tasks.join(', ') : 'None'}</td>
+                </tr>
+            `).join('');
+
+            contentDiv.style.display = 'block';
+        }
+
+        // Modal functions
+        function showAddEmployeeModal() {
+            document.getElementById('addEmployeeModal').style.display = 'block';
+        }
+
+        function closeAddEmployeeModal() {
+            document.getElementById('addEmployeeModal').style.display = 'none';
+            document.getElementById('addEmployeeForm').reset();
+        }
+
+        // Form submission
+        document.getElementById('addEmployeeForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const employeeData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                department: formData.get('department'),
+                skills: formData.get('skills'),
+                level: formData.get('level'),
+                availability: true
+            };
+
+            try {
+                const response = await fetch('/api/employees', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(employeeData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage('employee-message', 'success', 'Employee added successfully!');
+                    closeAddEmployeeModal();
+                    loadEmployees();
+                } else {
+                    showMessage('employee-message', 'error', 'Failed to add employee: ' + data.message);
+                }
+            } catch (error) {
+                showMessage('employee-message', 'error', 'Error adding employee: ' + error.message);
+            }
+        });
+
+        // Utility functions
+        function showMessage(elementId, type, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${type}">${escapeHtml(message)}</div>`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            const modal = document.getElementById('addEmployeeModal');
+            if (event.target === modal) {
+                closeAddEmployeeModal();
+            }
+        }
+    </script>
+</body>
+
+</html>

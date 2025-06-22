@@ -1,0 +1,482 @@
+{% extends "base.html" %}
+
+{% block title %}Employee Management - AI Task Assignment System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-users me-2"></i>
+                Employee Management
+            </h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                <i class="fas fa-user-plus me-2"></i>
+                Add Employee
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Employee Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="total-employees">0</div>
+                <div class="stat-label">Total Employees</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="available-employees">0</div>
+                <div class="stat-label">Available</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="departments">0</div>
+                <div class="stat-label">Departments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-number" id="avg-workload">0</div>
+                <div class="stat-label">Avg Tasks/Employee</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employee Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="departmentFilter" class="form-label">Department</label>
+                        <select class="form-select" id="departmentFilter">
+                            <option value="">All Departments</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="availabilityFilter" class="form-label">Availability</label>
+                        <select class="form-select" id="availabilityFilter">
+                            <option value="">All</option>
+                            <option value="true">Available</option>
+                            <option value="false">Unavailable</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="searchFilter" class="form-label">Search</label>
+                        <input type="text" class="form-control" id="searchFilter" placeholder="Search employees...">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employees Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Employees</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Skills</th>
+                                <th>Availability</th>
+                                <th>Current Tasks</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeesTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                    <p>Loading employees...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addEmployeeForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="employeeName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="employeeName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="employeeEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="employeeEmail" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="employeeDepartment" class="form-label">Department</label>
+                                <select class="form-select" id="employeeDepartment">
+                                    <option value="">Select Department</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Design">Design</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Support">Support</option>
+                                    <option value="Management">Management</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="employeeAvailability" class="form-label">Availability</label>
+                                <select class="form-select" id="employeeAvailability">
+                                    <option value="true" selected>Available</option>
+                                    <option value="false">Unavailable</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="employeeSlackId" class="form-label">Slack ID (Optional)</label>
+                                <input type="text" class="form-control" id="employeeSlackId" placeholder="U1234567890">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="employeeJiraId" class="form-label">Jira ID (Optional)</label>
+                                <input type="text" class="form-control" id="employeeJiraId"
+                                    placeholder="user@example.com">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="employeeSkills" class="form-label">Skills (comma-separated)</label>
+                        <input type="text" class="form-control" id="employeeSkills"
+                            placeholder="Python, Flask, React, UI/UX Design, Marketing">
+                        <small class="form-text text-muted">
+                            Enter skills separated by commas. This helps with AI task assignment.
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addEmployee()">Add Employee</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Employee Modal -->
+<div class="modal fade" id="editEmployeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editEmployeeForm">
+                    <input type="hidden" id="editEmployeeId">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editEmployeeName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="editEmployeeName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editEmployeeEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editEmployeeEmail" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editEmployeeDepartment" class="form-label">Department</label>
+                                <select class="form-select" id="editEmployeeDepartment">
+                                    <option value="">Select Department</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Design">Design</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="Sales">Sales</option>
+                                    <option value="Support">Support</option>
+                                    <option value="Management">Management</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editEmployeeAvailability" class="form-label">Availability</label>
+                                <select class="form-select" id="editEmployeeAvailability">
+                                    <option value="true">Available</option>
+                                    <option value="false">Unavailable</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editEmployeeSkills" class="form-label">Skills (comma-separated)</label>
+                        <input type="text" class="form-control" id="editEmployeeSkills">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateEmployee()">Update Employee</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let allEmployees = [];
+    let allTasks = [];
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadEmployees();
+        loadTasks();
+        setupFilters();
+    });
+
+    async function loadEmployees() {
+        try {
+            const response = await axios.get('/api/employees');
+            allEmployees = response.data;
+            displayEmployees(allEmployees);
+            updateStatistics();
+            populateDepartmentFilter();
+        } catch (error) {
+            console.error('Error loading employees:', error);
+        }
+    }
+
+    async function loadTasks() {
+        try {
+            const response = await axios.get('/api/tasks');
+            allTasks = response.data;
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+        }
+    }
+
+    function displayEmployees(employees) {
+        const tbody = document.getElementById('employeesTableBody');
+
+        if (employees.length === 0) {
+            tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                    <i class="fas fa-users fa-2x mb-2"></i>
+                    <p>No employees found</p>
+                </td>
+            </tr>
+        `;
+            return;
+        }
+
+        tbody.innerHTML = employees.map(employee => {
+            const currentTasks = allTasks.filter(task =>
+                task.assignments.some(ass => ass.employee_id === employee.id)
+            ).length;
+
+            return `
+            <tr>
+                <td>
+                    <div>
+                        <strong>${employee.name}</strong>
+                        <br>
+                        <small class="text-muted">ID: ${employee.id}</small>
+                    </div>
+                </td>
+                <td>
+                    <a href="mailto:${employee.email}">${employee.email}</a>
+                </td>
+                <td>
+                    <span class="badge bg-info">${employee.department || 'N/A'}</span>
+                </td>
+                <td>
+                    <small>${employee.skills || 'No skills listed'}</small>
+                </td>
+                <td>
+                    <span class="badge ${employee.availability ? 'bg-success' : 'bg-danger'}">
+                        ${employee.availability ? 'Available' : 'Unavailable'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge bg-primary">${currentTasks}</span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary" onclick="editEmployee(${employee.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="deleteEmployee(${employee.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        }).join('');
+    }
+
+    function updateStatistics() {
+        const departments = new Set(allEmployees.map(emp => emp.department).filter(dept => dept));
+        const availableEmployees = allEmployees.filter(emp => emp.availability).length;
+
+        document.getElementById('total-employees').textContent = allEmployees.length;
+        document.getElementById('available-employees').textContent = availableEmployees;
+        document.getElementById('departments').textContent = departments.size;
+
+        // Calculate average workload
+        const totalTasks = allTasks.length;
+        const avgWorkload = allEmployees.length > 0 ? (totalTasks / allEmployees.length).toFixed(1) : 0;
+        document.getElementById('avg-workload').textContent = avgWorkload;
+    }
+
+    function populateDepartmentFilter() {
+        const departments = new Set(allEmployees.map(emp => emp.department).filter(dept => dept));
+        const filter = document.getElementById('departmentFilter');
+
+        departments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept;
+            option.textContent = dept;
+            filter.appendChild(option);
+        });
+    }
+
+    function setupFilters() {
+        const filters = ['departmentFilter', 'availabilityFilter', 'searchFilter'];
+
+        filters.forEach(filterId => {
+            document.getElementById(filterId).addEventListener('change', filterEmployees);
+            if (filterId === 'searchFilter') {
+                document.getElementById(filterId).addEventListener('input', filterEmployees);
+            }
+        });
+    }
+
+    function filterEmployees() {
+        const departmentFilter = document.getElementById('departmentFilter').value;
+        const availabilityFilter = document.getElementById('availabilityFilter').value;
+        const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+        let filteredEmployees = allEmployees.filter(employee => {
+            const matchesDepartment = !departmentFilter || employee.department === departmentFilter;
+            const matchesAvailability = availabilityFilter === '' ||
+                employee.availability.toString() === availabilityFilter;
+            const matchesSearch = !searchFilter ||
+                employee.name.toLowerCase().includes(searchFilter) ||
+                employee.email.toLowerCase().includes(searchFilter) ||
+                (employee.skills && employee.skills.toLowerCase().includes(searchFilter));
+
+            return matchesDepartment && matchesAvailability && matchesSearch;
+        });
+
+        displayEmployees(filteredEmployees);
+    }
+
+    async function addEmployee() {
+        const formData = {
+            name: document.getElementById('employeeName').value,
+            email: document.getElementById('employeeEmail').value,
+            department: document.getElementById('employeeDepartment').value,
+            availability: document.getElementById('employeeAvailability').value === 'true',
+            slack_id: document.getElementById('employeeSlackId').value,
+            jira_id: document.getElementById('employeeJiraId').value,
+            skills: document.getElementById('employeeSkills').value
+        };
+
+        try {
+            const response = await axios.post('/api/employees', formData);
+            alert('Employee added successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal')).hide();
+            loadEmployees();
+        } catch (error) {
+            alert('Error adding employee: ' + error.response.data.error);
+        }
+    }
+
+    function editEmployee(employeeId) {
+        const employee = allEmployees.find(emp => emp.id === employeeId);
+        if (!employee) return;
+
+        document.getElementById('editEmployeeId').value = employee.id;
+        document.getElementById('editEmployeeName').value = employee.name;
+        document.getElementById('editEmployeeEmail').value = employee.email;
+        document.getElementById('editEmployeeDepartment').value = employee.department || '';
+        document.getElementById('editEmployeeAvailability').value = employee.availability.toString();
+        document.getElementById('editEmployeeSkills').value = employee.skills || '';
+
+        new bootstrap.Modal(document.getElementById('editEmployeeModal')).show();
+    }
+
+    async function updateEmployee() {
+        const employeeId = document.getElementById('editEmployeeId').value;
+        const formData = {
+            name: document.getElementById('editEmployeeName').value,
+            email: document.getElementById('editEmployeeEmail').value,
+            department: document.getElementById('editEmployeeDepartment').value,
+            availability: document.getElementById('editEmployeeAvailability').value === 'true',
+            skills: document.getElementById('editEmployeeSkills').value
+        };
+
+        try {
+            // This would call an update endpoint
+            alert('Update functionality to be implemented');
+            bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal')).hide();
+            loadEmployees();
+        } catch (error) {
+            alert('Error updating employee: ' + error.message);
+        }
+    }
+
+    function deleteEmployee(employeeId) {
+        if (confirm('Are you sure you want to delete this employee?')) {
+            // This would call a delete endpoint
+            alert('Delete functionality to be implemented');
+        }
+    }
+</script>
+{% endblock %}
