@@ -43,6 +43,38 @@ An intelligent task management system that uses AI to automatically assign tasks
 └── requirements.txt           # Python dependencies
 ```
 
+### System Architecture Flow
+
+Below is a high-level architecture diagram of the application's flow:
+
+```mermaid
+flowchart TD
+   A["User"] -->|"Interacts via UI/API"| B["Frontend"]
+    A["User"] -->|"Interacts via SLackMessage"| C["Backend (Flask app.py/routes.py)"]
+    B -->|"Sends requests"| C["Backend (Flask app.py/routes.py)"]
+    C -->|"Reads/Writes"| D["Database (models/database.py)"]
+    C -->|"Uses"| E["Agents (agents/task_assignment_agent.py)"]
+    C -->|"Uses"| F["Utils (utils/*)"]
+    F -->|"Email/Jira/Slack"| G["External Services (email, Jira, Slack)"]
+    E -->|"Assigns tasks"| D
+    C -->|"Handles AI logic"| H["TaskIntentDetector"]
+    H -->|"Interacts with"| E
+    H -->|"Interacts with"| F
+
+    subgraph "Backend"
+        C
+        E
+        F
+        H
+    end
+    subgraph "Database"
+        D
+    end
+    subgraph "External"
+        G
+    end
+```
+
 ## 🛠️ Prerequisites
 
 - Python 3.8+
